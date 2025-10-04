@@ -1,13 +1,16 @@
+// db.js
 require('dotenv').config();
 const { Pool } = require('pg');
 
-const connectionString = `postgresql://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
+// Build the connection string safely, encoding password
+const connectionString = process.env.DATABASE_URL || `postgresql://${process.env.DB_USER}:${encodeURIComponent(process.env.DB_PASSWORD)}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
 const pool = new Pool({
   connectionString,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: false }, // required for Supabase / remote Postgres
 });
 
+// Test the connection immediately
 (async () => {
   try {
     const client = await pool.connect();
@@ -20,4 +23,5 @@ const pool = new Pool({
   }
 })();
 
+// Export the pool for use in other modules
 module.exports = pool;
