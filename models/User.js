@@ -1,95 +1,66 @@
 const pool = require("../db");
 const bcrypt = require("bcryptjs");
 
-// Ensure users table exists
+// Ensure users & related tables exist
 const ensureUsersTable = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email VARCHAR(255) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        type VARCHAR(50) NOT NULL DEFAULT 'tenant', -- superadmin, admin, tenant
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("✅ Users table ensured");
-  } catch (err) {
-    console.error("❌ Error creating users table:", err.message);
-    process.exit(1);
-  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      password VARCHAR(255) NOT NULL,
+      type VARCHAR(50) NOT NULL DEFAULT 'tenant',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  console.log("✅ Users table ensured");
 };
 
-// Ensure permissions table exists
 const ensurePermissionsTable = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS permissions (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100) UNIQUE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("✅ Permissions table ensured");
-  } catch (err) {
-    console.error("❌ Error creating permissions table:", err.message);
-    process.exit(1);
-  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS permissions (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  console.log("✅ Permissions table ensured");
 };
 
-// Ensure roles table exists
 const ensureRolesTable = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS roles (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) UNIQUE NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    console.log("✅ Roles table ensured");
-  } catch (err) {
-    console.error("❌ Error creating roles table:", err.message);
-    process.exit(1);
-  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS roles (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(50) UNIQUE NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  console.log("✅ Roles table ensured");
 };
 
-// Map roles to permissions
 const ensureRolePermissionsTable = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS role_permissions (
-        id SERIAL PRIMARY KEY,
-        role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
-        permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(role_id, permission_id)
-      )
-    `);
-    console.log("✅ Role-Permissions table ensured");
-  } catch (err) {
-    console.error("❌ Error creating role_permissions table:", err.message);
-    process.exit(1);
-  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      id SERIAL PRIMARY KEY,
+      role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+      permission_id INTEGER REFERENCES permissions(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(role_id, permission_id)
+    )
+  `);
+  console.log("✅ Role-Permissions table ensured");
 };
 
-// Map users to roles
 const ensureUserRolesTable = async () => {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS user_roles (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-        role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(user_id, role_id)
-      )
-    `);
-    console.log("✅ User-Roles table ensured");
-  } catch (err) {
-    console.error("❌ Error creating user_roles table:", err.message);
-    process.exit(1);
-  }
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_roles (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      role_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(user_id, role_id)
+    )
+  `);
+  console.log("✅ User-Roles table ensured");
 };
 
 // Initialize all tables
@@ -100,7 +71,6 @@ const init = async () => {
   await ensureRolePermissionsTable();
   await ensureUserRolesTable();
 };
-
 init();
 
 const User = {
@@ -121,24 +91,14 @@ const User = {
   },
 
   findByEmail: async (email) => {
-    try {
-      const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [
-        email,
-      ]);
-      return result.rows[0] || null;
-    } catch (err) {
-      console.error("❌ Error finding user by email:", err.message);
-      throw err;
-    }
+    const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [
+      email,
+    ]);
+    return result.rows[0] || null;
   },
 
   verifyPassword: async (plainPassword, hashedPassword) => {
-    try {
-      return await bcrypt.compare(plainPassword, hashedPassword);
-    } catch (err) {
-      console.error("❌ Error verifying password:", err.message);
-      throw err;
-    }
+    return await bcrypt.compare(plainPassword, hashedPassword);
   },
 };
 

@@ -40,8 +40,7 @@ const ensureDesignsTable = async () => {
 
 ensureDesignsTable();
 
-// Create a new design
-async function createDesign(data) {
+const createDesign = async (data) => {
   try {
     const result = await pool.query(
       `INSERT INTO designs (
@@ -82,10 +81,9 @@ async function createDesign(data) {
     console.error("❌ Error creating design:", err.message);
     throw err;
   }
-}
+};
 
-// Get paginated designs with filters
-async function getDesignsPaginated({ skip = 0, limit = 50, filters = {} }) {
+const getDesignsPaginated = async ({ skip = 0, limit = 50, filters = {} }) => {
   try {
     const conditions = [];
     const values = [];
@@ -97,8 +95,9 @@ async function getDesignsPaginated({ skip = 0, limit = 50, filters = {} }) {
       paramIndex++;
     });
 
-    const whereClause =
-      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(" AND ")}`
+      : "";
 
     const totalResult = await pool.query(
       `SELECT COUNT(*) FROM designs ${whereClause}`,
@@ -118,9 +117,6 @@ async function getDesignsPaginated({ skip = 0, limit = 50, filters = {} }) {
     console.error("❌ Error fetching paginated designs:", err.message);
     throw err;
   }
-}
-
-module.exports = {
-  createDesign,
-  getDesignsPaginated,
 };
+
+module.exports = { createDesign, getDesignsPaginated };
